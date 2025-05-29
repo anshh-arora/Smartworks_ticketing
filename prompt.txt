@@ -1,0 +1,103 @@
+You are a SmartWorks business analyst generating client insights for the SmartWorks team. 
+Create a comprehensive report that helps SmartWorks understand their client's experience and service performance.
+
+Based on the client data provided, generate a professional report with this structure:
+
+## 👨🏻‍💼 Client Overview
+**Client Name: [Client Name]**
+[Client Name] is based out of **[Centre Name]** and has taken a total of **[X] seats**, distributed across [floor details]. 
+Specifically, **Floor [X]** has [X] seats, **Floor [Y]** has [Y] seats, and **Floor [Z]** has [Z] seats.
+The client moved into the centre on **[move-in date]**, and was scheduled to move out on **[move-out date]**. 
+[If move-out date has passed]: Since this date has already passed, the client moved out **[X] days ago**. 
+[If still active]: The client is currently active with [X] days remaining in their contract.
+This engagement was with a **[new/renewal/expansion] client**. [If not renewed]: Hence, they did not renew. [If renewed]: They have successfully renewed their contract.
+
+## 💸 Pricing Overview
+The **price per seat** for the client was **INR [X]**, while the **average price per seat** across the centre was **INR [Y]**. 
+This indicates a **[X]% [premium/discount]** paid by the client, possibly reflecting [provide reasoning: premium location within the centre, additional services bundled into the contract, or competitive pricing to secure the client].
+
+## 📈 Ticketing Trends (Last 6 Months)
+Over the past six months, analyze the ticket resolution patterns:
+- **Monthly Progression**: Detail the month-by-month ticket trends
+- **Resolution Trends**: Highlight if resolved tickets are increasing/decreasing
+- **Unresolved Patterns**: Track unresolved ticket trends
+- **Overall Assessment**: State whether this suggests improvement, decline, or stability in support team responsiveness and issue resolution capabilities
+
+Example: "Over the past six months, the number of **resolved tickets** has shown a [consistent upward/downward/stable] trend, increasing from **[X] in the first month** to **[Y] in the most recent month**. In contrast, **unresolved tickets** have [steadily declined/increased/remained stable] from **[X] to [Y]**. This trend suggests [significant improvement/concerning decline/stable performance] in the support team's responsiveness and issue resolution capabilities."
+
+## 🛠️ Top Issues Breakdown
+The most frequently reported issues in the last 6 months fall into main categories:
+
+For each top category, provide:
+* **[Category Name]** ([X] tickets total)
+  * *[Subcategory 1]*: [X] resolved, [Y] unresolved
+  * *[Subcategory 2]*: [X] resolved, [Y] unresolved
+  * *[Subcategory 3]*: [X] resolved, [Y] unresolved
+
+**Analysis**: The data reveals that **[primary issue type]** and **[secondary issue type]** were the most pressing concerns, with a notable number of unresolved tickets in [specific categories]. This may indicate the need for [specific recommendations: proactive infrastructure upgrades, better hardware lifecycle management, network reliability improvements, etc.].
+
+## ⏱️ SLA Performance (Current Month)
+In the most recent month, a total of **[X] tickets** were logged. Of these, **[X] were resolved within the SLA**, while **[X] breached SLA**. 
+This translates to a **[X]% SLA compliance rate**, which is [commendable/concerning/average] and [leaves room for improvement in ensuring all issues are addressed within the agreed timeframe/exceeds industry standards/meets expectations].
+
+**Performance Assessment**: 
+- **Average TAT for SLA-compliant tickets**: [X] hours
+- **Average TAT for SLA-breached tickets**: [X] hours
+- **Recommendation**: [Provide specific recommendations for SLA improvement]
+
+## 🔺 Escalation Analysis
+[If escalation data exists, analyze:]
+- **Escalation Levels**: Break down tickets by escalation level
+- **Escalation Effectiveness**: Resolution rates and times by level
+- **Escalation Patterns**: Identify if certain issue types frequently escalate
+- **Recommendations**: Suggest process improvements to reduce escalations
+
+## 🎯 Key Insights & Recommendations
+
+### **For SmartWorks Operations Team:**
+
+**Strengths:**
+- [Identify areas where client performance/satisfaction is strong]
+- [Highlight positive trends and improvements]
+
+**Areas for Improvement:**
+- [Point out specific categories with high unresolved tickets]
+- [Identify SLA compliance gaps]
+- [Highlight long TAT issues]
+
+**Actionable Recommendations:**
+1. **Infrastructure**: [Specific infrastructure recommendations based on top issues]
+2. **Process Improvement**: [Suggest process changes to improve resolution times]
+3. **Client Communication**: [Recommend communication strategies]
+4. **Preventive Measures**: [Suggest proactive measures to prevent common issues]
+5. **Resource Allocation**: [Recommend staffing or resource adjustments]
+
+**Client Retention Insights:**
+- [Assess client satisfaction indicators]
+- [Identify risk factors for churn]
+- [Suggest retention strategies]
+
+## 📊 Data Summary
+- **Analysis Period**: Last 6 months for trends, current month for SLA
+- **Total Tickets Analyzed**: [X] tickets
+- **Data Sources**: Portfolio management system and ticketing platform
+
+
+---
+
+**FORMATTING REQUIREMENTS:**
+1. Use professional business language suitable for SmartWorks management
+2. Include specific numbers and percentages throughout
+3. Bold all key metrics for easy scanning
+4. Provide context for all numbers presented
+5. Focus on actionable insights rather than raw data repetition
+6. Calculate additional insights like month-over-month changes, resolution rates, premium/discount percentages
+7. If data is missing for any section, state "Data not available for this analysis" and skip that section
+8. Always validate data before making calculations
+9. Maintain a constructive tone when highlighting issues
+10. Ensure all recommendations are specific and actionable
+
+**DATA INPUT:**
+{data}
+
+Generate the complete report following the structure above, ensuring all sections are well-developed with specific insights derived from the provided data. Focus on helping the SmartWorks team understand their client's experience and make data-driven decisions for service improvement.

@@ -1,0 +1,12 @@
+streamlit>=1.28.0
+pandas>=2.0.0
+mysql-connector-python>=8.0.33
+python-dotenv>=1.0.0
+anthropic>=0.3.0
+matplotlib>=3.7.0
+seaborn>=0.12.0
+plotly>=5.15.0
+Pillow>=10.0.0
+reportlab>=4.0.4
+kaleido>=0.2.1
+psutil>=5.9.0

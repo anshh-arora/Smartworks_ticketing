@@ -1,0 +1,237 @@
+Based on the SmartWorks client data, generate Python code to create EXACTLY 4 professional charts using plotly for client analytics dashboard.
+
+**DATA INPUT:**
+{data}
+
+**REQUIREMENTS:**
+Create these 4 charts in exact order:
+1. **fig1** - Monthly Ticket Trends (Line chart showing ticket volume and resolution patterns over last 6 months)
+2. **fig2** - Issue Categories Breakdown (Horizontal bar chart for better readability of category names)
+3. **fig3** - Escalation Level Distribution (Donut chart with professional color scheme)
+4. **fig4** - SLA Compliance Overview (Gauge-style chart or professional pie chart with percentage display)
+
+**TECHNICAL REQUIREMENTS:**
+- Use plotly.express (px) and plotly.graph_objects (go)
+- Apply SmartWorks professional color scheme
+- Include proper error handling for missing/empty data
+- Add informative hover information and proper formatting
+- Use 'plotly_white' template for clean appearance
+- Ensure charts are responsive and display well in Streamlit
+- Include proper titles, axis labels, and legends
+- Add percentage displays where relevant
+
+**COLOR SCHEME:**
+- Primary: #1f77b4 (Blue)
+- Success/Resolved: #2ca02c (Green) 
+- Warning/Pending: #ff7f0e (Orange)
+- Error/Breached: #d62728 (Red)
+- Neutral: Plotly's Set3 or viridis color schemes
+
+**RETURN ONLY EXECUTABLE PYTHON CODE:**
+
+```python
+import plotly.express as px
+import plotly.graph_objects as go
+import pandas as pd
+
+# Chart 1 - Monthly Ticket Trends (Line Chart)
+if 'monthly_trend' in client_data and client_data['monthly_trend']:
+    df_monthly = pd.DataFrame(client_data['monthly_trend'])
+    
+    fig1 = go.Figure()
+    
+    # Add Total Tickets line
+    fig1.add_trace(go.Scatter(
+        x=df_monthly['month'], 
+        y=df_monthly['total_tickets'],
+        name='Total Tickets', 
+        mode='lines+markers',
+        line=dict(width=3, color='#1f77b4'),
+        marker=dict(size=8),
+        hovertemplate='<b>%{x}</b><br>Total Tickets: %{y}<extra></extra>'
+    ))
+    
+    # Add Resolved Tickets line
+    fig1.add_trace(go.Scatter(
+        x=df_monthly['month'], 
+        y=df_monthly['resolved_tickets'],
+        name='Resolved Tickets', 
+        mode='lines+markers',
+        line=dict(width=3, color='#2ca02c'),
+        marker=dict(size=8),
+        hovertemplate='<b>%{x}</b><br>Resolved: %{y}<extra></extra>'
+    ))
+    
+    # Add Unresolved Tickets line
+    fig1.add_trace(go.Scatter(
+        x=df_monthly['month'], 
+        y=df_monthly['unresolved_tickets'],
+        name='Unresolved Tickets', 
+        mode='lines+markers',
+        line=dict(width=3, color='#d62728'),
+        marker=dict(size=8),
+        hovertemplate='<b>%{x}</b><br>Unresolved: %{y}<extra></extra>'
+    ))
+    
+    fig1.update_layout(
+        title='📈 Monthly Ticket Trends (Last 6 Months)',
+        xaxis_title='Month',
+        yaxis_title='Number of Tickets',
+        hovermode='x unified',
+        template='plotly_white',
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+        height=400
+    )
+else:
+    fig1 = None
+
+# Chart 2 - Issue Categories Breakdown (Horizontal Bar Chart)
+if 'issues_breakdown' in client_data and client_data['issues_breakdown']:
+    df_issues = pd.DataFrame(client_data['issues_breakdown'])
+    # Get top 10 categories by total tickets
+    top_issues = df_issues.nlargest(10, 'total_tickets')
+    
+    fig2 = px.bar(
+        top_issues, 
+        y='category', 
+        x='total_tickets',
+        title='🛠️ Top Issue Categories',
+        color='total_tickets',
+        color_continuous_scale='viridis',
+        orientation='h',
+        text='total_tickets'
+    )
+    
+    fig2.update_traces(
+        texttemplate='%{text}',
+        textposition='outside',
+        hovertemplate='<b>%{y}</b><br>Total Tickets: %{x}<br>Resolution Rate: %{customdata:.1f}%<extra></extra>',
+        customdata=top_issues['resolution_rate'] if 'resolution_rate' in top_issues.columns else [0]*len(top_issues)
+    )
+    
+    fig2.update_layout(
+        yaxis_title='Issue Category',
+        xaxis_title='Number of Tickets',
+        template='plotly_white',
+        height=400,
+        yaxis={'categoryorder':'total ascending'}
+    )
+else:
+    fig2 = None
+
+# Chart 3 - Escalation Level Distribution (Donut Chart)
+if 'escalation_analysis' in client_data and client_data['escalation_analysis']:
+    df_esc = pd.DataFrame(client_data['escalation_analysis'])
+    
+    # Group by escalation level if multiple statuses exist
+    esc_summary = df_esc.groupby('escalationLevel').agg({
+        'ticket_count': 'sum',
+        'resolved_count': 'sum'
+    }).reset_index()
+    
+    fig3 = px.pie(
+        esc_summary, 
+        values='ticket_count', 
+        names='escalationLevel',
+        title='🔺 Ticket Escalation Level Distribution',
+        hole=0.4,
+        color_discrete_sequence=px.colors.qualitative.Set3
+    )
+    
+    fig3.update_traces(
+        textposition='inside', 
+        textinfo='percent+label',
+        hovertemplate='<b>Level %{label}</b><br>Tickets: %{value}<br>Percentage: %{percent}<extra></extra>'
+    )
+    
+    # Add center annotation
+    total_escalated = esc_summary['ticket_count'].sum()
+    fig3.add_annotation(
+        text=f'{total_escalated}<br>Total<br>Escalated',
+        x=0.5, y=0.5,
+        font_size=16,
+        showarrow=False
+    )
+    
+    fig3.update_layout(
+        template='plotly_white',
+        height=400
+    )
+else:
+    fig3 = None
+
+# Chart 4 - SLA Compliance Overview (Enhanced Pie Chart with Center Text)
+if 'sla_compliance' in client_data and client_data['sla_compliance']:
+    df_sla = pd.DataFrame(client_data['sla_compliance'])
+    sla_rate = df_sla.iloc[0]['sla_compliance_rate']
+    within_sla = df_sla.iloc[0]['within_sla']
+    sla_breached = df_sla.iloc[0]['sla_breached']
+    
+    fig4 = go.Figure()
+    
+    fig4.add_trace(go.Pie(
+        labels=['Within SLA', 'SLA Breached'],
+        values=[within_sla, sla_breached],
+        hole=0.6,
+        marker_colors=['#2E8B57', '#DC143C'],
+        textinfo='label+percent',
+        textposition='outside',
+        hovertemplate='<b>%{label}</b><br>Tickets: %{value}<br>Percentage: %{percent}<extra></extra>'
+    ))
+    
+    # Add center annotation with SLA rate
+    fig4.add_annotation(
+        text=f'{sla_rate}%<br><b>SLA<br>Compliance</b>',
+        x=0.5, y=0.5,
+        font_size=20,
+        showarrow=False,
+        font_color='#2E8B57' if sla_rate >= 90 else '#ff7f0e' if sla_rate >= 75 else '#DC143C'
+    )
+    
+    fig4.update_layout(
+        title='⏱️ SLA Compliance Overview (Current Month)',
+        template='plotly_white',
+        height=400,
+        showlegend=True,
+        legend=dict(orientation="h", yanchor="bottom", y=-0.1, xanchor="center", x=0.5)
+    )
+else:
+    fig4 = None
+```
+
+**DATA HANDLING NOTES:**
+- Each chart includes proper null/empty data checking
+- Charts gracefully handle missing data by setting figure to None
+- Hover information provides additional context
+- Charts are sized appropriately for Streamlit dashboard (height=400)
+- Color coding follows logical patterns (green=good, red=bad, blue=neutral)
+- Text annotations provide clear data insights
+- Responsive design works on different screen sizes
+
+**CHART SPECIFICATIONS:**
+
+**Fig1 (Monthly Trends):**
+- Multi-line chart with markers
+- Shows total, resolved, and unresolved tickets
+- X-axis: Month, Y-axis: Ticket count
+- Hover shows exact values for each month
+
+**Fig2 (Issue Categories):**
+- Horizontal bar chart (better for long category names)
+- Top 10 categories by ticket volume
+- Color gradient based on ticket count
+- Shows total tickets with resolution rate in hover
+
+**Fig3 (Escalation Levels):**
+- Donut chart with center annotation
+- Groups escalation data by level
+- Shows percentage distribution
+- Center displays total escalated count
+
+**Fig4 (SLA Compliance):**
+- Donut chart with large center percentage
+- Color-coded center text based on performance
+- Green (≥90%), Orange (75-89%), Red (<75%)
+- Outside labels with percentages
+
+Generate the complete Python code following these specifications.
