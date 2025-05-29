@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import json
 import os
+import tempfile
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
 import mysql.connector
@@ -25,19 +26,42 @@ from reportlab.lib import colors
 import markdown
 warnings.filterwarnings('ignore')
 
-# Load environment variables
+# Load environment variables (for local development)
 load_dotenv()
 
-# Authentication credentials (in production, use environment variables or secure storage)
-VALID_USERS = {
-    "smartworks_admin": "sw2024!",
-    "client_manager": "cm2024!",
-    "operations": "ops2024!",
-    "ansh.arora1@sworks.co.in": "ansh1529"
-}
+# Authentication credentials - updated for Streamlit Cloud deployment
+try:
+    # Try to use Streamlit secrets first (for cloud deployment)
+    VALID_USERS = {
+        "smartworks_admin": st.secrets.get("SMARTWORKS_ADMIN_PASSWORD"),
+        "client_manager": st.secrets.get("CLIENT_MANAGER_PASSWORD"),
+        "operations": st.secrets.get("OPERATIONS_PASSWORD", "ops2024!"),
+        "ansh.arora1@sworks.co.in": st.secrets.get("ANSH_PASSWORD", "ansh1529")
+    }
+except Exception:
+    # Fallback to environment variables or defaults (for local development)
+    VALID_USERS = {
+        "smartworks_admin": os.getenv("SMARTWORKS_ADMIN_PASSWORD", "sw2024!"),
+        "client_manager": os.getenv("CLIENT_MANAGER_PASSWORD", "cm2024!"),
+        "operations": os.getenv("OPERATIONS_PASSWORD", "ops2024!"),
+        "ansh.arora1@sworks.co.in": os.getenv("ANSH_PASSWORD", "ansh1529")
+    }
 
-# Create data directory if it doesn't exist
-DATA_DIR = "/Users/ansharora/Desktop/Smartworks/AI_Reports/client_data"
+# Create data directory that works with Streamlit Cloud
+if 'DATA_DIR' not in st.session_state:
+    # Use temporary directory for Streamlit Cloud deployment
+    try:
+        temp_dir = tempfile.mkdtemp()
+        st.session_state.DATA_DIR = temp_dir
+        DATA_DIR = temp_dir
+    except Exception:
+        # Fallback for local development
+        DATA_DIR = "/tmp/smartworks_client_data"
+        st.session_state.DATA_DIR = DATA_DIR
+else:
+    DATA_DIR = st.session_state.DATA_DIR
+
+# Ensure directory exists
 if not os.path.exists(DATA_DIR):
     os.makedirs(DATA_DIR)
 
@@ -85,29 +109,50 @@ if 'generated_reports' not in st.session_state:
 if 'current_report' not in st.session_state:
     st.session_state.current_report = None
 
-# Initialize connections
+# Initialize connections - updated for Streamlit Cloud
 @st.cache_resource
 def init_connections():
     connections = {}
     
-    # MySQL connection
+    # MySQL connection using Streamlit secrets or environment variables
     try:
-        conn = mysql.connector.connect(
-            host=os.getenv('DB_HOST'),
-            database=os.getenv('DB_NAME'),
-            user=os.getenv('DB_USER'),
-            password=os.getenv('DB_PASSWORD'),
-            port=int(os.getenv("DB_PORT", 3306))
-        )
+        # Try Streamlit secrets first (for cloud deployment)
+        try:
+            conn = mysql.connector.connect(
+                host=st.secrets["DB_HOST"],
+                database=st.secrets["DB_NAME"],
+                user=st.secrets["DB_USER"],
+                password=st.secrets["DB_PASSWORD"],
+                port=int(st.secrets.get("DB_PORT", 3306))
+            )
+        except Exception:
+            # Fallback to environment variables (for local development)
+            conn = mysql.connector.connect(
+                host=os.getenv('DB_HOST'),
+                database=os.getenv('DB_NAME'),
+                user=os.getenv('DB_USER'),
+                password=os.getenv('DB_PASSWORD'),
+                port=int(os.getenv("DB_PORT", 3306))
+            )
+        
         connections['mysql'] = conn
         print("✅ Connected to MySQL database")
     except Error as e:
         st.error(f"❌ Error connecting to MySQL: {e}")
         connections['mysql'] = None
+    except Exception as e:
+        st.error(f"❌ Database configuration error: {e}")
+        connections['mysql'] = None
     
-    # Anthropic AI
+    # Anthropic AI using Streamlit secrets or environment variables
     try:
-        anthropic_api_key = os.getenv("ANTHROPIC_API_KEY")
+        # Try Streamlit secrets first
+        try:
+            anthropic_api_key = st.secrets["ANTHROPIC_API_KEY"]
+        except Exception:
+            # Fallback to environment variables
+            anthropic_api_key = os.getenv("ANTHROPIC_API_KEY")
+        
         if anthropic_api_key:
             connections['anthropic'] = Anthropic(api_key=anthropic_api_key)
             print("✅ AI service initialized")
@@ -124,7 +169,12 @@ def init_connections():
 @st.cache_data
 def load_smartworks_prompt():
     try:
-        prompt_path = os.getenv("PROMPT_FILE_PATH", "./prompt.txt")
+        # Try to load from file, with fallback to default
+        try:
+            prompt_path = st.secrets.get("PROMPT_FILE_PATH", "./prompt.txt")
+        except Exception:
+            prompt_path = os.getenv("PROMPT_FILE_PATH", "./prompt.txt")
+        
         with open(prompt_path, "r") as f:
             return f.read()
     except Exception as e:
@@ -184,7 +234,12 @@ Format with proper markdown, bold key metrics, and provide actionable insights f
 
 def load_graph_prompt():
     try:
-        graph_prompt_path = os.getenv("GRAPH_PROMPT_FILE_PATH", "./graph_prompt.txt")
+        # Try to load from file, with fallback to default
+        try:
+            graph_prompt_path = st.secrets.get("GRAPH_PROMPT_FILE_PATH", "./graph_prompt.txt")
+        except Exception:
+            graph_prompt_path = os.getenv("GRAPH_PROMPT_FILE_PATH", "./graph_prompt.txt")
+        
         with open(graph_prompt_path, "r") as f:
             return f.read()
     except Exception as e:
@@ -613,26 +668,26 @@ def execute_chart_code(chart_code, client_data):
         st.error(f"Error executing chart code: {e}")
         return {}
 
-# Save data function
+# Save data function - updated for Streamlit Cloud
 def save_client_data(client_name, data):
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    filename = f"{client_name.replace(' ', '_').replace(',', '')}_{timestamp}.json"
-    filepath = os.path.join(DATA_DIR, filename)
-    
-    data_with_meta = {
-        "client_name": client_name,
-        "timestamp": timestamp,
-        "generated_at": datetime.now().isoformat(),
-        "generated_by": st.session_state.get('username', 'unknown'),
-        "data": data
-    }
-    
     try:
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"{client_name.replace(' ', '_').replace(',', '')}_{timestamp}.json"
+        filepath = os.path.join(DATA_DIR, filename)
+        
+        data_with_meta = {
+            "client_name": client_name,
+            "timestamp": timestamp,
+            "generated_at": datetime.now().isoformat(),
+            "generated_by": st.session_state.get('username', 'unknown'),
+            "data": data
+        }
+        
         with open(filepath, 'w', encoding='utf-8') as f:
             json.dump(data_with_meta, f, indent=2, default=str, ensure_ascii=False)
         return filepath
     except Exception as e:
-        st.error(f"Error saving data: {e}")
+        print(f"Warning: Could not save data: {e}")
         return None
 
 # Display previous reports section
