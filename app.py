@@ -24,6 +24,7 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
 from reportlab.lib import colors
 import markdown
+import streamlit as st
 warnings.filterwarnings('ignore')
 
 # Load environment variables (for local development)
