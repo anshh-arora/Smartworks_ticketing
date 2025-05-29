@@ -1,4 +1,49 @@
-import streamlit as st
+# Add database connection test function
+def test_database_connection():
+    """Test database connectivity with detailed error reporting"""
+    try:
+        # Basic connection test
+        import socket
+        
+        # Test DNS resolution first
+        try:
+            host = st.secrets.get("DB_HOST", "unknown")
+            port = int(st.secrets.get("DB_PORT", 3306))
+            
+            # Test if host resolves
+            socket.gethostbyname(host)
+            st.success(f"✅ DNS Resolution: {host} resolves successfully")
+            
+            # Test if port is reachable
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock.settimeout(5)  # 5 second timeout
+            result = sock.connect_ex((host, port))
+            sock.close()
+            
+            if result == 0:
+                st.success(f"✅ Port Connectivity: {host}:{port} is reachable")
+                
+                # Test MySQL connection
+                conn = mysql.connector.connect(
+                    host=st.secrets["DB_HOST"],
+                    database=st.secrets["DB_NAME"],
+                    user=st.secrets["DB_USER"],
+                    password=st.secrets["DB_PASSWORD"],
+                    port=int(st.secrets.get("DB_PORT", 3306)),
+                    connect_timeout=10
+                )
+                conn.close()
+                st.success("✅ MySQL Connection: Database connection successful!")
+                return True
+            else:
+                st.error(f"❌ Port Connectivity: Cannot reach {host}:{port}")
+                return False
+                
+        except socket.gaierror as e:
+            st.error(f"❌ DNS Resolution: Cannot resolve {host} - {e}")
+            return False
+        except Exception as e:
+            st.error(f"import streamlit as st
 import pandas as pd
 import json
 import os
@@ -33,8 +78,8 @@ load_dotenv()
 try:
     # Try to use Streamlit secrets first (for cloud deployment)
     VALID_USERS = {
-        "smartworks_admin": st.secrets.get("SMARTWORKS_ADMIN_PASSWORD"),
-        "client_manager": st.secrets.get("CLIENT_MANAGER_PASSWORD"),
+        "smartworks_admin": st.secrets.get("SMARTWORKS_ADMIN_PASSWORD", "sw2024!"),
+        "client_manager": st.secrets.get("CLIENT_MANAGER_PASSWORD", "cm2024!"),
         "operations": st.secrets.get("OPERATIONS_PASSWORD", "ops2024!"),
         "ansh.arora1@sworks.co.in": st.secrets.get("ANSH_PASSWORD", "ansh1529")
     }
@@ -109,42 +154,67 @@ if 'generated_reports' not in st.session_state:
 if 'current_report' not in st.session_state:
     st.session_state.current_report = None
 
-# Initialize connections - updated for Streamlit Cloud
+# Initialize connections - optimized for Streamlit Cloud
 @st.cache_resource
 def init_connections():
     connections = {}
     
-    # MySQL connection using Streamlit secrets or environment variables
+    # MySQL connection with timeout and retry logic
     try:
+        # Connection parameters with timeouts
+        connection_config = {
+            'connect_timeout': 10,  # 10 seconds connection timeout
+            'autocommit': True,
+            'raise_on_warnings': True,
+            'use_unicode': True,
+            'charset': 'utf8mb4',
+            'connection_timeout': 10,
+            'pool_name': 'smartworks_pool',
+            'pool_size': 3,
+            'pool_reset_session': True
+        }
+        
         # Try Streamlit secrets first (for cloud deployment)
         try:
-            conn = mysql.connector.connect(
-                host=st.secrets["DB_HOST"],
-                database=st.secrets["DB_NAME"],
-                user=st.secrets["DB_USER"],
-                password=st.secrets["DB_PASSWORD"],
-                port=int(st.secrets.get("DB_PORT", 3306))
-            )
+            connection_config.update({
+                'host': st.secrets["DB_HOST"],
+                'database': st.secrets["DB_NAME"],
+                'user': st.secrets["DB_USER"],
+                'password': st.secrets["DB_PASSWORD"],
+                'port': int(st.secrets.get("DB_PORT", 3306))
+            })
         except Exception:
             # Fallback to environment variables (for local development)
-            conn = mysql.connector.connect(
-                host=os.getenv('DB_HOST'),
-                database=os.getenv('DB_NAME'),
-                user=os.getenv('DB_USER'),
-                password=os.getenv('DB_PASSWORD'),
-                port=int(os.getenv("DB_PORT", 3306))
-            )
+            connection_config.update({
+                'host': os.getenv('DB_HOST'),
+                'database': os.getenv('DB_NAME'),
+                'user': os.getenv('DB_USER'),
+                'password': os.getenv('DB_PASSWORD'),
+                'port': int(os.getenv("DB_PORT", 3306))
+            })
+        
+        # Create connection with timeout
+        conn = mysql.connector.connect(**connection_config)
+        
+        # Test connection with a simple query
+        cursor = conn.cursor()
+        cursor.execute("SELECT 1")
+        cursor.fetchone()
+        cursor.close()
         
         connections['mysql'] = conn
         print("✅ Connected to MySQL database")
-    except Error as e:
-        st.error(f"❌ Error connecting to MySQL: {e}")
+        
+    except mysql.connector.Error as e:
+        st.error(f"❌ MySQL Error: {e}")
+        print(f"MySQL connection failed: {e}")
         connections['mysql'] = None
     except Exception as e:
-        st.error(f"❌ Database configuration error: {e}")
+        st.error(f"❌ Database connection failed: {str(e)}")
+        print(f"Database connection error: {e}")
         connections['mysql'] = None
     
-    # Anthropic AI using Streamlit secrets or environment variables
+    # Anthropic AI - quick initialization
     try:
         # Try Streamlit secrets first
         try:
@@ -154,11 +224,14 @@ def init_connections():
             anthropic_api_key = os.getenv("ANTHROPIC_API_KEY")
         
         if anthropic_api_key:
-            connections['anthropic'] = Anthropic(api_key=anthropic_api_key)
+            connections['anthropic'] = Anthropic(
+                api_key=anthropic_api_key,
+                timeout=30.0  # 30 second timeout for API calls
+            )
             print("✅ AI service initialized")
         else:
             connections['anthropic'] = None
-            st.warning("⚠️ AI service not available")
+            st.warning("⚠️ AI service not available - API key missing")
     except Exception as e:
         st.error(f"❌ Error initializing AI service: {e}")
         connections['anthropic'] = None
