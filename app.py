@@ -25,6 +25,7 @@ from reportlab.lib.units import inch
 from reportlab.lib import colors
 import markdown
 import streamlit as st
+
 warnings.filterwarnings('ignore')
 
 # Load environment variables (for local development)
@@ -34,7 +35,7 @@ load_dotenv()
 try:
     # Try to use Streamlit secrets first (for cloud deployment)
     VALID_USERS = {
-        "smartworks_admin": st.secrets.get("SMARTWORKS_ADMIN_PASSWORD", "sw2024!"),
+        "smartworks_admin": st.secrets.get("SMARTWORKS_ADMIN_PASSWORD", "sw2025!"),
         "client_manager": st.secrets.get("CLIENT_MANAGER_PASSWORD", "cm2024!"),
         "operations": st.secrets.get("OPERATIONS_PASSWORD", "ops2024!"),
         "ansh.arora1@sworks.co.in": st.secrets.get("ANSH_PASSWORD", "ansh1529")
@@ -89,7 +90,6 @@ def check_authentication():
                 else:
                     st.error("Invalid credentials. Please try again.")
         
-        st.info("🔹 Demo Credentials: smartworks_admin / sw2024!")
         return False
     
     return True
